@@ -45,12 +45,14 @@ Demo password for every seeded account: `password`
 
 | Role       | Email                      | Name            |
 |------------|----------------------------|-----------------|
-| BACKOFFICE | backoffice@ship.local      | Emma Larsen     |
-| TECHNICIAN | ahmed.hassan@ship.local    | Ahmed Hassan    |
-| TECHNICIAN | thomas.berg@ship.local     | Thomas Berg     |
-| TECHNICIAN | john.nielsen@ship.local    | John Nielsen    |
-| TECHNICIAN | peter.holm@ship.local      | Peter Holm      |
-| TECHNICIAN | daniel.kowalski@ship.local | Daniel Kowalski |
+| BACKOFFICE | emma.weber@ship.local         | Emma Weber       |
+| BACKOFFICE | lena.schneider@ship.local    | Lena Schneider   |
+| TECHNICIAN | thomas.berger@ship.local     | Thomas Berger    |
+| TECHNICIAN | johannes.mueller@ship.local  | Johannes Müller  |
+| TECHNICIAN | peter.hoffmann@ship.local    | Peter Hoffmann   |
+| TECHNICIAN | daniel.schmidt@ship.local    | Daniel Schmidt   |
+| TECHNICIAN | lukas.fischer@ship.local     | Lukas Fischer    |
+| TECHNICIAN | anna.koch@ship.local         | Anna Koch        |
 
 The web app lives in `../frontend` (`npm install` then `npm run dev`). It proxies `/api` to port 4000.
 
