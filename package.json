@@ -1,0 +1,48 @@
+{
+  "name": "ship-maintenance-api",
+  "version": "0.1.0",
+  "description": "Shipping Maintenance Communication Module API",
+  "main": "dist/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "migrate": "npm run migration:run",
+    "typecheck": "tsc --noEmit",
+    "typeorm": "tsx ./node_modules/typeorm/cli.js",
+    "migration:run": "tsx ./node_modules/typeorm/cli.js migration:run -d src/data-source.ts",
+    "migration:revert": "tsx ./node_modules/typeorm/cli.js migration:revert -d src/data-source.ts",
+    "migration:generate": "tsx ./node_modules/typeorm/cli.js migration:generate -d src/data-source.ts",
+    "seed": "tsx src/db/seed.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "cors": "^2.8.6",
+    "dotenv": "^18.0.3",
+    "express": "^5.2.1",
+    "helmet": "^8.3.0",
+    "morgan": "^1.12.1",
+    "pg": "^8.23.0",
+    "reflect-metadata": "^0.2.2",
+    "typeorm": "0.3.22",
+    "uuid": "^14.0.2",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/morgan": "^1.9.10",
+    "@types/node": "^26.6.2",
+    "@types/pg": "^8.23.1",
+    "@types/uuid": "^10.0.0",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  }
+}
