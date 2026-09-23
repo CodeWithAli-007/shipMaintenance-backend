@@ -9,6 +9,7 @@ import { Vessel } from '../entities/Vessel.js';
 import {
   AssignmentType,
   EntityStatus,
+  ProjectPriority,
   ProjectStatus,
   UserRole,
 } from '../entities/enums.js';
@@ -21,6 +22,7 @@ export interface CreateProjectInput {
   title: string;
   description: string | null;
   notes: string | null;
+  priority: ProjectPriority;
   mode: 'MANUAL' | 'TEAM';
   technicianIds: string[];
   teamId: string | null;
@@ -31,6 +33,7 @@ export interface UpdateProjectInput {
   title?: string;
   description?: string | null;
   notes?: string | null;
+  priority?: ProjectPriority;
   status?: ProjectStatus;
 }
 
@@ -51,6 +54,7 @@ function toProjectDetail(project: Project) {
     description: project.description,
     notes: project.notes,
     status: project.status,
+    priority: project.priority,
     vesselLocationSnapshot: project.vesselLocationSnapshot,
     startedAt: project.startedAt,
     closedAt: project.closedAt,
@@ -102,6 +106,7 @@ function toProjectListItem(project: Project) {
     projectCode: project.projectCode,
     title: project.title,
     status: project.status,
+    priority: project.priority,
     startedAt: project.startedAt,
     createdAt: project.createdAt,
     vesselLocationSnapshot: project.vesselLocationSnapshot,
@@ -286,6 +291,7 @@ export async function createProject(input: CreateProjectInput, actor: AuthUser) 
       title: input.title,
       description: input.description,
       notes: input.notes,
+      priority: input.priority ?? ProjectPriority.MEDIUM,
       vesselLocationSnapshot: vessel.currentLocation,
       status: ProjectStatus.OPEN,
       createdBy: { id: actor.id } as User,
@@ -370,6 +376,7 @@ export async function updateProject(
   if (input.title !== undefined) project.title = input.title;
   if (input.description !== undefined) project.description = input.description;
   if (input.notes !== undefined) project.notes = input.notes;
+  if (input.priority !== undefined) project.priority = input.priority;
   if (input.status !== undefined) {
     project.status = input.status;
     if (input.status === ProjectStatus.CLOSED || input.status === ProjectStatus.COMPLETED) {

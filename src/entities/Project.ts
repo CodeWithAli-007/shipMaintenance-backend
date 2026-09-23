@@ -9,7 +9,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { ProjectStatus } from './enums.js';
+import { ProjectStatus, ProjectPriority } from './enums.js';
 import { Vessel } from './Vessel.js';
 import { User } from './User.js';
 import type { ProjectAssignment } from './ProjectAssignment.js';
@@ -58,6 +58,15 @@ export class Project {
     default: ProjectStatus.OPEN,
   })
   status!: ProjectStatus;
+
+  @Index()
+  @Column({
+    type: 'enum',
+    enum: ProjectPriority,
+    enumName: 'project_priority',
+    default: ProjectPriority.MEDIUM,
+  })
+  priority!: ProjectPriority;
 
   @ManyToOne(() => User, { nullable: true, onDelete: 'SET NULL' })
   @JoinColumn({ name: 'created_by' })

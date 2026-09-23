@@ -1,4 +1,5 @@
 export enum UserRole {
+  ADMIN = 'ADMIN',
   BACKOFFICE = 'BACKOFFICE',
   TECHNICIAN = 'TECHNICIAN',
 }
@@ -15,6 +16,12 @@ export enum ProjectStatus {
   UNDER_REVIEW = 'UNDER_REVIEW',
   COMPLETED = 'COMPLETED',
   CLOSED = 'CLOSED',
+}
+
+export enum ProjectPriority {
+  LOW = 'LOW',
+  MEDIUM = 'MEDIUM',
+  HIGH = 'HIGH',
 }
 
 export enum AssignmentType {

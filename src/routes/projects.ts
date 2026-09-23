@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { ProjectStatus, UserRole } from '../entities/enums.js';
+import { ProjectPriority, ProjectStatus, UserRole } from '../entities/enums.js';
 import { asyncHandler, parseInput } from '../lib/http.js';
 import { requireAuth, requireRoles } from '../middleware/auth.js';
 import {
@@ -48,6 +48,7 @@ projectsRouter.post(
         title: body.title,
         description: body.description ?? null,
         notes: body.notes ?? null,
+        priority: body.priority as ProjectPriority,
         mode: body.mode,
         technicianIds: body.technicianIds,
         teamId: body.teamId ?? null,
@@ -67,7 +68,11 @@ projectsRouter.patch(
     const body = parseInput(updateProjectBody, req.body);
     const project = await updateProject(
       id,
-      { ...body, status: body.status as ProjectStatus | undefined },
+      {
+        ...body,
+        status: body.status as ProjectStatus | undefined,
+        priority: body.priority as ProjectPriority | undefined,
+      },
       req.user!,
     );
     res.json({ project });

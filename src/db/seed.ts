@@ -9,6 +9,12 @@ const DEMO_PASSWORD = 'password';
 
 const seedUsers = [
   {
+    id: '11111111-1111-1111-1111-111111111111',
+    email: 'klaus.braun@ship.local',
+    fullName: 'Klaus Braun',
+    role: UserRole.ADMIN,
+  },
+  {
     id: '22222222-2222-2222-2222-222222222222',
     email: 'emma.weber@ship.local',
     fullName: 'Emma Weber',
@@ -73,7 +79,7 @@ async function seed(): Promise<void> {
   await AppDataSource.initialize();
   const repo = AppDataSource.getRepository(User);
   const passwordHash = await hashPassword(DEMO_PASSWORD);
-  const activeEmails = new Set(seedUsers.map((user) => user.email));
+  const activeEmails = new Set<string>(seedUsers.map((user) => user.email));
 
   for (const user of seedUsers) {
     const existing =
@@ -105,7 +111,9 @@ async function seed(): Promise<void> {
   }
 
   const leftovers = await repo.find({
-    where: { email: In(legacyEmails.filter((email) => !activeEmails.has(email))) },
+    where: {
+      email: In(legacyEmails.filter((email) => !activeEmails.has(email))),
+    },
   });
   for (const user of leftovers) {
     user.isActive = false;

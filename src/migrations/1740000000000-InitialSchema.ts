@@ -12,7 +12,7 @@ export class InitialSchema1740000000000 implements MigrationInterface {
 
     await queryRunner.query(`
       DO $$ BEGIN
-        CREATE TYPE user_role AS ENUM ('BACKOFFICE', 'TECHNICIAN');
+        CREATE TYPE user_role AS ENUM ('ADMIN', 'BACKOFFICE', 'TECHNICIAN');
       EXCEPTION WHEN duplicate_object THEN NULL; END $$;
     `);
     await queryRunner.query(`

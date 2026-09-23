@@ -45,6 +45,7 @@ Demo password for every seeded account: `password`
 
 | Role       | Email                      | Name            |
 |------------|----------------------------|-----------------|
+| ADMIN      | klaus.braun@ship.local       | Klaus Braun      |
 | BACKOFFICE | emma.weber@ship.local         | Emma Weber       |
 | BACKOFFICE | lena.schneider@ship.local    | Lena Schneider   |
 | TECHNICIAN | thomas.berger@ship.local     | Thomas Berger    |
@@ -53,6 +54,8 @@ Demo password for every seeded account: `password`
 | TECHNICIAN | daniel.schmidt@ship.local    | Daniel Schmidt   |
 | TECHNICIAN | lukas.fischer@ship.local     | Lukas Fischer    |
 | TECHNICIAN | anna.koch@ship.local         | Anna Koch        |
+
+Admin signs in to `/admin` and manages Backoffice/Technician accounts only.
 
 The web app lives in `../frontend` (`npm install` then `npm run dev`). It proxies `/api` to port 4000.
 

@@ -41,3 +41,16 @@ export async function canAccessFinding(
 export function isBackofficeRole(role: UserRole | string): boolean {
   return role === UserRole.BACKOFFICE;
 }
+
+export function isAdminRole(role: UserRole | string): boolean {
+  return role === UserRole.ADMIN;
+}
+
+/** Roles an Admin may create or edit in the Admin portal. */
+export const MANAGED_USER_ROLES = [UserRole.BACKOFFICE, UserRole.TECHNICIAN] as const;
+
+export function isManagedUserRole(role: UserRole | string): boolean {
+  return (
+    role === UserRole.BACKOFFICE || role === UserRole.TECHNICIAN
+  );
+}
