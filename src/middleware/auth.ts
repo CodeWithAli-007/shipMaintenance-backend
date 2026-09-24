@@ -1,54 +1,99 @@
 import type { NextFunction, Request, Response } from 'express';
 import { AppDataSource } from '../data-source.js';
-import { env } from '../config/env.js';
-import { User } from '../entities/User.js';
+import { AuthSession } from '../entities/AuthSession.js';
 import { UnauthorizedError, ForbiddenError } from '../lib/errors.js';
 import type { AuthUser } from '../types/index.js';
 import { UserRole } from '../entities/enums.js';
+import {
+  CSRF_COOKIE,
+  SESSION_COOKIE,
+  hashToken,
+  parseCookies,
+  safeTokenMatches,
+} from '../lib/session.js';
 
-/**
- * MVP auth placeholder.
- * Prefer Authorization: Bearer <user-uuid> in development, or DEV_AUTH_USER_ID.
- * Replace with session + email 2FA middleware when integrating existing auth.
- */
 export async function requireAuth(
   req: Request,
   _res: Response,
   next: NextFunction,
 ): Promise<void> {
   try {
-    const header = req.header('authorization');
-    const bearerId = header?.startsWith('Bearer ')
-      ? header.slice('Bearer '.length).trim()
-      : undefined;
-    const userId = bearerId || env.devAuthUserId;
+    const token = parseCookies(req)[SESSION_COOKIE];
+    if (!token) throw new UnauthorizedError();
 
-    if (!userId) {
-      throw new UnauthorizedError(
-        'Provide Authorization: Bearer <user-id> or set DEV_AUTH_USER_ID',
-      );
-    }
-
-    const userEntity = await AppDataSource.getRepository(User).findOne({
-      where: { id: userId },
+    const session = await AppDataSource.getRepository(AuthSession).findOne({
+      where: { tokenHash: hashToken(token) },
+      relations: { user: true },
     });
-
-    if (!userEntity || !userEntity.isActive) {
-      throw new UnauthorizedError('Invalid or inactive user');
+    if (
+      !session ||
+      session.revokedAt ||
+      session.expiresAt.getTime() <= Date.now() ||
+      !session.user.isActive
+    ) {
+      throw new UnauthorizedError('Invalid or expired session');
     }
 
     const user: AuthUser = {
-      id: userEntity.id,
-      email: userEntity.email,
-      fullName: userEntity.fullName,
-      role: userEntity.role,
+      id: session.user.id,
+      email: session.user.email,
+      fullName: session.user.fullName,
+      role: session.user.role,
     };
 
     req.user = user;
+    req.authSessionId = session.id;
+    req.authCsrfHash = session.csrfHash;
+    if (Date.now() - session.lastSeenAt.getTime() > 5 * 60 * 1000) {
+      session.lastSeenAt = new Date();
+      await AppDataSource.getRepository(AuthSession).save(session);
+    }
     next();
   } catch (error) {
     next(error);
   }
+}
+
+export function requireCsrf(req: Request, _res: Response, next: NextFunction): void {
+  if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) {
+    next();
+    return;
+  }
+  const csrfCookie = parseCookies(req)[CSRF_COOKIE];
+  const csrfHeader = req.header('x-csrf-token');
+  const expectedHash = req.authCsrfHash;
+  if (
+    !csrfCookie ||
+    !csrfHeader ||
+    csrfCookie !== csrfHeader ||
+    !expectedHash ||
+    !safeTokenMatches(csrfHeader, expectedHash)
+  ) {
+    next(new ForbiddenError('Invalid CSRF token'));
+    return;
+  }
+  next();
+}
+
+export function requireAuthenticatedMutation(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): void {
+  if (
+    ['GET', 'HEAD', 'OPTIONS'].includes(req.method) ||
+    req.path === '/auth/login'
+  ) {
+    next();
+    return;
+  }
+  void requireAuth(req, res, (error?: unknown) => {
+    if (error) {
+      next(error);
+      return;
+    }
+    requireCsrf(req, res, next);
+  });
 }
 
 export function requireRoles(...roles: UserRole[]) {

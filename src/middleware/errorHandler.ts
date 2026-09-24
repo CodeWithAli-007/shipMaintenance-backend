@@ -12,6 +12,10 @@ export function errorHandler(
   res: Response,
   _next: NextFunction,
 ): void {
+  if (typeof err === 'object' && err !== null && 'type' in err && err.type === 'entity.too.large') {
+    res.status(413).json({ error: { code: 'PAYLOAD_TOO_LARGE', message: 'Attachments are too large. Keep the total under 20 MB.' } });
+    return;
+  }
   if (err instanceof AppError) {
     res.status(err.statusCode).json({
       error: {

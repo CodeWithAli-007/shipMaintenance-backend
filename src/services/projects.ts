@@ -2,6 +2,9 @@ import { AppDataSource } from '../data-source.js';
 import { Project } from '../entities/Project.js';
 import { ProjectAssignment } from '../entities/ProjectAssignment.js';
 import { ProjectMember } from '../entities/ProjectMember.js';
+import { ProjectBackofficeMember } from '../entities/ProjectBackofficeMember.js';
+import { ProjectChatRoom } from '../entities/ProjectChatRoom.js';
+import { ChatMembershipOutbox } from '../entities/ChatMembershipOutbox.js';
 import { Team } from '../entities/Team.js';
 import { TeamMember } from '../entities/TeamMember.js';
 import { User } from '../entities/User.js';
@@ -82,6 +85,16 @@ function toProjectDetail(project: Project) {
         ? { id: member.sourceTeam.id, name: member.sourceTeam.name }
         : null,
     })),
+    backofficeMembers: (project.backofficeMembers ?? [])
+      .slice()
+      .sort((a, b) => a.addedAt.getTime() - b.addedAt.getTime())
+      .map((member) => ({
+        id: member.id,
+        active: member.active,
+        addedAt: member.addedAt,
+        removedAt: member.removedAt,
+        user: person(member.user)!,
+      })),
     assignments: (project.assignments ?? [])
       .slice()
       .sort((a, b) => a.assignedAt.getTime() - b.assignedAt.getTime())
@@ -131,6 +144,7 @@ const detailRelations = {
   vessel: { client: true },
   createdBy: true,
   members: { user: true, sourceTeam: true },
+  backofficeMembers: { user: true },
   assignments: { team: true, assignedBy: true },
 } as const;
 
@@ -176,6 +190,36 @@ async function requireTechnicians(manager: typeof AppDataSource.manager, ids: st
     }
   }
   return ids;
+}
+
+async function requireBackofficeUser(
+  manager: typeof AppDataSource.manager,
+  userId: string,
+): Promise<User> {
+  const user = await manager.findOne(User, { where: { id: userId } });
+  if (!user || !user.isActive || user.role !== UserRole.BACKOFFICE) {
+    throw new ValidationError('Select an active Backoffice user');
+  }
+  return user;
+}
+
+async function enqueueChatMembership(
+  manager: typeof AppDataSource.manager,
+  projectId: string,
+  operation: 'CREATE_ROOM' | 'INVITE' | 'REMOVE',
+  userId?: string,
+): Promise<void> {
+  await manager.save(
+    manager.create(ChatMembershipOutbox, {
+      project: { id: projectId } as Project,
+      user: userId ? ({ id: userId } as User) : null,
+      operation,
+      status: 'PENDING',
+      attempts: 0,
+      lastError: null,
+      nextAttemptAt: new Date(),
+    }),
+  );
 }
 
 async function nextProjectCode(manager: typeof AppDataSource.manager) {
@@ -298,6 +342,29 @@ export async function createProject(input: CreateProjectInput, actor: AuthUser) 
       startedAt: new Date(),
     });
     await manager.save(project);
+
+    await manager.save(
+      manager.create(ProjectBackofficeMember, {
+        project,
+        user: { id: actor.id } as User,
+        addedBy: { id: actor.id } as User,
+        active: true,
+        removedAt: null,
+      }),
+    );
+    await manager.save(
+      manager.create(ProjectChatRoom, {
+        project,
+        matrixRoomId: null,
+        syncStatus: 'PENDING',
+        lastError: null,
+      }),
+    );
+    await enqueueChatMembership(manager, project.id, 'CREATE_ROOM');
+    await enqueueChatMembership(manager, project.id, 'INVITE', actor.id);
+    for (const userId of memberIds) {
+      await enqueueChatMembership(manager, project.id, 'INVITE', userId);
+    }
 
     const manualAssignment =
       manualIds.length > 0
@@ -429,6 +496,7 @@ export async function addProjectMember(projectId: string, userId: string, actor:
         addedBy: { id: actor.id } as User,
       }),
     );
+    await enqueueChatMembership(manager, projectId, 'INVITE', userId);
   });
 
   return getProject(projectId, actor);
@@ -455,7 +523,62 @@ export async function removeProjectMember(
     member.removedAt = new Date();
     member.removedBy = { id: actor.id } as User;
     await manager.save(member);
+    await enqueueChatMembership(manager, projectId, 'REMOVE', userId);
   });
 
+  return getProject(projectId, actor);
+}
+
+export async function addProjectBackofficeMember(
+  projectId: string,
+  userId: string,
+  actor: AuthUser,
+) {
+  if (!isBackofficeRole(actor.role)) {
+    throw new ForbiddenError('Only backoffice can change project members');
+  }
+  await AppDataSource.transaction(async (manager) => {
+    const project = await manager.findOne(Project, { where: { id: projectId } });
+    if (!project) throw new NotFoundError('Project not found');
+    await requireBackofficeUser(manager, userId);
+    const existing = await manager.findOne(ProjectBackofficeMember, {
+      where: { project: { id: projectId }, user: { id: userId }, active: true },
+    });
+    if (existing) throw new ConflictError('This Backoffice user is already assigned');
+    await manager.save(
+      manager.create(ProjectBackofficeMember, {
+        project,
+        user: { id: userId } as User,
+        addedBy: { id: actor.id } as User,
+        active: true,
+        removedAt: null,
+      }),
+    );
+    await enqueueChatMembership(manager, projectId, 'INVITE', userId);
+  });
+  return getProject(projectId, actor);
+}
+
+export async function removeProjectBackofficeMember(
+  projectId: string,
+  userId: string,
+  actor: AuthUser,
+) {
+  if (!isBackofficeRole(actor.role)) {
+    throw new ForbiddenError('Only backoffice can change project members');
+  }
+  if (userId === actor.id) {
+    throw new ValidationError('You cannot remove yourself from the project chat');
+  }
+  await AppDataSource.transaction(async (manager) => {
+    const member = await manager.findOne(ProjectBackofficeMember, {
+      where: { project: { id: projectId }, user: { id: userId }, active: true },
+    });
+    if (!member) throw new NotFoundError('Active Backoffice membership not found');
+    member.active = false;
+    member.removedAt = new Date();
+    await manager.save(member);
+    await enqueueChatMembership(manager, projectId, 'REMOVE', userId);
+  });
   return getProject(projectId, actor);
 }

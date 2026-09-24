@@ -13,3 +13,7 @@ export { FindingUpdate } from './FindingUpdate.js';
 export { MediaAsset } from './MediaAsset.js';
 export { FindingAttachment } from './FindingAttachment.js';
 export { FindingComment } from './FindingComment.js';
+export { AuthSession } from './AuthSession.js';
+export { MatrixUserIdentity } from './MatrixUserIdentity.js';
+export { ProjectChatRoom } from './ProjectChatRoom.js';
+export { ChatMembershipOutbox } from './ChatMembershipOutbox.js';

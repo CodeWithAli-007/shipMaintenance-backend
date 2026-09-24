@@ -14,7 +14,9 @@
     "migration:run": "tsx ./node_modules/typeorm/cli.js migration:run -d src/data-source.ts",
     "migration:revert": "tsx ./node_modules/typeorm/cli.js migration:revert -d src/data-source.ts",
     "migration:generate": "tsx ./node_modules/typeorm/cli.js migration:generate -d src/data-source.ts",
-    "seed": "tsx src/db/seed.ts"
+    "seed": "tsx src/db/seed.ts",
+    "test:media": "tsx tests/finding-media.integration.ts",
+    "test:chat": "tsx tests/project-chat-membership.integration.ts"
   },
   "keywords": [],
   "author": "",
@@ -24,14 +26,16 @@
     "node": ">=20"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1138.0",
     "cors": "^2.8.6",
     "dotenv": "^18.0.3",
     "express": "^5.2.1",
+    "express-rate-limit": "^8.7.0",
     "helmet": "^8.3.0",
     "morgan": "^1.12.1",
     "pg": "^8.23.0",
     "reflect-metadata": "^0.2.2",
-    "typeorm": "0.3.22",
+    "typeorm": "^0.3.31",
     "uuid": "^14.0.2",
     "zod": "^4.6.5"
   },

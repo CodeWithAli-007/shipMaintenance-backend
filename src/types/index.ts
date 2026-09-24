@@ -13,6 +13,8 @@ declare global {
   namespace Express {
     interface Request {
       user?: AuthUser;
+      authSessionId?: string;
+      authCsrfHash?: string;
     }
   }
 }

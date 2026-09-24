@@ -8,6 +8,7 @@ import { projectsRouter } from './projects.js';
 import { usersRouter } from './users.js';
 import { findingsRouter } from './findings.js';
 import { adminRouter } from './admin.js';
+import { projectChatRouter } from './projectChat.js';
 import { requireAuth, requireRoles } from '../middleware/auth.js';
 import { canAccessProject, canAccessFinding } from '../services/access.js';
 import { ForbiddenError, ValidationError } from '../lib/errors.js';
@@ -23,6 +24,7 @@ apiRouter.use('/teams', teamsRouter);
 apiRouter.use('/projects', projectsRouter);
 apiRouter.use('/users', usersRouter);
 apiRouter.use('/admin', adminRouter);
+apiRouter.use(projectChatRouter);
 apiRouter.use(findingsRouter);
 
 /**

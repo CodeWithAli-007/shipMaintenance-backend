@@ -70,6 +70,10 @@ export class MediaAsset {
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt!: Date;
 
+  @Index()
+  @Column({ name: 'expires_at', type: 'timestamptz' })
+  expiresAt!: Date;
+
   @OneToMany('FindingAttachment', 'mediaAsset')
   findingAttachments!: FindingAttachment[];
 }

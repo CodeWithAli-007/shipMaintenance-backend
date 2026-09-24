@@ -1,4 +1,8 @@
 import express from 'express';
+import {
+  requireAuth,
+  requireAuthenticatedMutation,
+} from './middleware/auth.js';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
@@ -10,16 +14,30 @@ export function createApp() {
   const app = express();
 
   app.disable('x-powered-by');
-  app.use(helmet());
+  app.use(
+    helmet({
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          baseUri: ["'self'"],
+          objectSrc: ["'none'"],
+          frameAncestors: ["'none'"],
+        },
+      },
+      referrerPolicy: { policy: 'no-referrer' },
+    }),
+  );
   app.use(
     cors({
       origin: env.corsOrigins.includes('*') ? true : env.corsOrigins,
       credentials: true,
     }),
   );
+  app.use('/api/findings/:id/messages', requireAuth, express.json({ limit: '30mb' }));
   app.use(express.json({ limit: '2mb' }));
   app.use(express.urlencoded({ extended: true }));
   app.use(morgan(env.isProduction ? 'combined' : 'dev'));
+  app.use('/api', requireAuthenticatedMutation);
 
   app.get('/', (_req, res) => {
     res.json({

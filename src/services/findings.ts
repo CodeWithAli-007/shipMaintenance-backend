@@ -3,7 +3,7 @@ import { Finding } from '../entities/Finding.js';
 import { FindingUpdate } from '../entities/FindingUpdate.js';
 import { Project } from '../entities/Project.js';
 import { User } from '../entities/User.js';
-import { FindingSeverity, FindingStatus, ProjectStatus } from '../entities/enums.js';
+import { CommentVisibility, FindingSeverity, FindingStatus, ProjectStatus } from '../entities/enums.js';
 import { ForbiddenError, NotFoundError, ValidationError } from '../lib/errors.js';
 import { canAccessProject, isBackofficeRole } from './access.js';
 import type { AuthUser } from '../types/index.js';
@@ -71,7 +71,17 @@ function toFindingListItem(finding: Finding) {
   };
 }
 
-function toFindingDetail(finding: Finding) {
+function toFindingDetail(finding: Finding, actor: AuthUser) {
+  const media = (finding.attachments ?? [])
+    .slice()
+    .sort((a, b) => a.sortOrder - b.sortOrder || a.createdAt.getTime() - b.createdAt.getTime())
+    .map(link => ({
+    id: link.mediaAsset.id, name: link.mediaAsset.originalFilename,
+    type: link.mediaAsset.mediaType, mimeType: link.mediaAsset.mimeType,
+    size: Number(link.mediaAsset.fileSizeBytes ?? 0), createdAt: link.createdAt,
+    expiresAt: link.mediaAsset.expiresAt,
+    updateId: link.findingUpdate?.id ?? null,
+  }));
   const updates = (finding.updates ?? [])
     .slice()
     .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
@@ -90,6 +100,10 @@ function toFindingDetail(finding: Finding) {
       note: update.note,
       createdAt: update.createdAt,
       createdBy: person(update.createdBy),
+    })),
+    ...(finding.comments ?? []).filter(comment => comment.visibility !== CommentVisibility.INTERNAL || isBackofficeRole(actor.role)).map(comment => ({
+      id: comment.id, kind: 'COMMENT' as const, note: comment.comment,
+      createdAt: comment.createdAt, createdBy: person(comment.user), visibility: comment.visibility,
     })),
   ].sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
 
@@ -117,6 +131,7 @@ function toFindingDetail(finding: Finding) {
       createdBy: person(update.createdBy),
     })),
     activity,
+    media,
   };
 }
 
@@ -126,6 +141,8 @@ async function loadFinding(id: string) {
     relations: {
       createdBy: true,
       updates: { createdBy: true },
+      attachments: { mediaAsset: true, findingUpdate: true },
+      comments: { user: true },
       project: { vessel: { client: true } },
     },
   });
@@ -157,7 +174,7 @@ export async function listProjectFindings(projectId: string, actor: AuthUser) {
 export async function getFinding(id: string, actor: AuthUser) {
   const finding = await loadFinding(id);
   await assertProjectAccess(actor, finding.project.id);
-  return toFindingDetail(finding);
+  return toFindingDetail(finding, actor);
 }
 
 export async function createFinding(

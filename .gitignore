@@ -7,3 +7,7 @@ dist/
 coverage/
 .vscode/
 .idea/
+
+.data/
+matrix/*.secret
+matrix/*.key

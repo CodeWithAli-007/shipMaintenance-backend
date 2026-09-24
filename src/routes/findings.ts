@@ -1,3 +1,6 @@
+import { z } from 'zod';
+import { uuidString } from './schemas.js';
+import { getMediaFile, messageBody, saveMessage } from '../services/findingMedia.js';
 import { Router } from 'express';
 import { FindingSeverity, FindingStatus } from '../entities/enums.js';
 import { asyncHandler, parseInput } from '../lib/http.js';
@@ -85,3 +88,18 @@ findingsRouter.post(
     res.status(201).json({ finding });
   }),
 );
+
+findingsRouter.post('/findings/:id/messages', asyncHandler(async (req, res) => {
+  const { id } = parseInput(uuidParam, req.params);
+  await saveMessage(id, parseInput(messageBody, req.body), req.user!);
+  res.status(201).json({ finding: await getFinding(id, req.user!) });
+}));
+findingsRouter.get('/findings/:id/media/:mediaId', asyncHandler(async (req, res) => {
+  const { id, mediaId } = parseInput(z.object({ id: uuidString, mediaId: uuidString }), req.params);
+  const { asset, bytes } = await getMediaFile(id, mediaId, req.user!);
+  res.setHeader('Content-Type', asset.mimeType);
+  res.setHeader('Cache-Control', 'private, no-store');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('Content-Disposition', `${asset.mediaType === 'DOCUMENT' ? 'attachment' : 'inline'}; filename*=UTF-8''${encodeURIComponent(asset.originalFilename)}`);
+  res.send(bytes);
+}));

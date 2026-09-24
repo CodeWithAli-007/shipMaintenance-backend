@@ -17,6 +17,7 @@ import type { ProjectBackofficeMember } from './ProjectBackofficeMember.js';
 import type { Finding } from './Finding.js';
 import type { FindingComment } from './FindingComment.js';
 import type { MediaAsset } from './MediaAsset.js';
+import type { AuthSession } from './AuthSession.js';
 
 @Entity({ name: 'users' })
 export class User {
@@ -76,4 +77,7 @@ export class User {
 
   @OneToMany('MediaAsset', 'uploadedBy')
   uploadedMedia!: MediaAsset[];
+
+  @OneToMany('AuthSession', 'user')
+  authSessions!: AuthSession[];
 }

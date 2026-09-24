@@ -99,7 +99,7 @@ export const updateProjectBody = z.object({
 export const createFindingBody = z.object({
   title: blankToNull(255),
   description: z.string().trim().min(1).max(10000),
-  severity: z.enum(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']).default('MEDIUM'),
+  severity: z.enum(['LOW', 'MEDIUM', 'HIGH']).default('MEDIUM'),
   equipmentName: blankToNull(255),
   equipmentModel: blankToNull(255),
   equipmentLocation: blankToNull(255),
@@ -108,7 +108,7 @@ export const createFindingBody = z.object({
 export const updateFindingBody = z.object({
   title: blankToNull(255),
   description: z.string().trim().min(1).max(10000).optional(),
-  severity: z.enum(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']).optional(),
+  severity: z.enum(['LOW', 'MEDIUM', 'HIGH']).optional(),
   status: z
     .enum(['OPEN', 'NEEDS_INFO', 'UNDER_REVIEW', 'REVIEWED', 'CLOSED'])
     .optional(),
