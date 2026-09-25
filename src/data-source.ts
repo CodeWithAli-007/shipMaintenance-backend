@@ -1,6 +1,4 @@
 import 'reflect-metadata';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { DataSource } from 'typeorm';
 import { env } from './config/env.js';
 import {
@@ -31,8 +29,6 @@ import { AddProjectPriority1740000004000 } from './migrations/1740000004000-AddP
 import { AddAuthSessions1740000005000 } from './migrations/1740000005000-AddAuthSessions.js';
 import { AddEncryptedProjectChat1740000006000 } from './migrations/1740000006000-AddEncryptedProjectChat.js';
 import { AddMediaExpiry1740000007000 } from './migrations/1740000007000-AddMediaExpiry.js';
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export const AppDataSource = new DataSource({
   type: 'postgres',
@@ -81,8 +77,3 @@ export const AppDataSource = new DataSource({
   },
 });
 
-/** Absolute entities/migrations globs for TypeORM CLI generate (optional) */
-export const typeormCliPaths = {
-  entitiesDir: path.join(__dirname, 'entities'),
-  migrationsDir: path.join(__dirname, 'migrations'),
-};

@@ -16,7 +16,8 @@
     "migration:generate": "tsx ./node_modules/typeorm/cli.js migration:generate -d src/data-source.ts",
     "seed": "tsx src/db/seed.ts",
     "test:media": "tsx tests/finding-media.integration.ts",
-    "test:chat": "tsx tests/project-chat-membership.integration.ts"
+    "test:chat": "tsx tests/project-chat-membership.integration.ts",
+    "migrate:prod": "node ./node_modules/typeorm/cli.js migration:run -d dist/data-source.js"
   },
   "keywords": [],
   "author": "",

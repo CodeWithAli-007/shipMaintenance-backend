@@ -14,8 +14,7 @@ Node.js + Express + TypeScript + PostgreSQL (TypeORM) backend for the Shipping M
 ## Quick start
 
 ```bash
-# 1. Start Postgres
-docker compose up -d
+# 1. Install & start PostgreSQL locally (or use an existing instance)
 
 # 2. Install deps (from backend/)
 npm install
@@ -34,8 +33,20 @@ npm run seed
 npm run dev
 ```
 
-API: `http://localhost:5000` (or the `PORT` in `.env`)  
-Health: `http://localhost:5000/api/health`
+API: `http://localhost:4090` (or the `PORT` in `.env`)  
+Health: `http://localhost:4090/api/health`
+
+## Production (Hostinger VPS — systemd)
+
+See `deploy/ship-maintenance-api.service` and `deploy/install.sh`.
+
+```bash
+# On the VPS, from backend/
+cp .env.example .env   # edit production values
+sudo bash deploy/install.sh
+curl http://127.0.0.1:4090/api/health
+```
+
 
 ## Dev auth
 
@@ -57,7 +68,7 @@ Demo password for every seeded account: `password`
 
 Admin signs in to `/admin` and manages Backoffice/Technician accounts only.
 
-The web app lives in `../frontend` (`npm install` then `npm run dev`). It proxies `/api` to port 4000.
+The web app lives in `../frontend` (`npm install` then `npm run dev`). It proxies `/api` to port 4090.
 
 ## Scripts
 
