@@ -9,8 +9,8 @@ import { FindingComment } from '../entities/FindingComment.js';
 import { FindingAttachment } from '../entities/FindingAttachment.js';
 import { MediaAsset } from '../entities/MediaAsset.js';
 import { CommentVisibility, MediaType } from '../entities/enums.js';
-import { ForbiddenError, NotFoundError, ValidationError } from '../lib/errors.js';
-import { storage } from '../storage/provider.js';
+import { AppError, ForbiddenError, NotFoundError, ValidationError } from '../lib/errors.js';
+import { getStorageProvider, storage } from '../storage/provider.js';
 import { canAccessFinding, isBackofficeRole } from './access.js';
 import { uuidString } from '../routes/schemas.js';
 import type { AuthUser } from '../types/index.js';
@@ -112,8 +112,10 @@ export async function getMediaFile(findingId: string, mediaId: string, actor: Au
   await assertFindingAccess(findingId, actor);
   const link = await AppDataSource.getRepository(FindingAttachment).findOne({ where: { finding: { id: findingId }, mediaAsset: { id: mediaId } }, relations: { mediaAsset: true } });
   if (!link || isMediaExpired(link.mediaAsset.expiresAt)) throw new NotFoundError('Media not found');
-  if (link.mediaAsset.storageProvider !== storage.name) throw new NotFoundError('Storage provider unavailable');
-  try { return { asset: link.mediaAsset, bytes: await storage.getFile(link.mediaAsset.storageKey) }; }
+  let source;
+  try { source = getStorageProvider(link.mediaAsset.storageProvider); }
+  catch { throw new AppError('Media storage is not configured. Ask your administrator to restore access to the original storage provider.', 503, 'MEDIA_STORAGE_UNAVAILABLE'); }
+  try { return { asset: link.mediaAsset, bytes: await source.getFile(link.mediaAsset.storageKey) }; }
   catch { throw new NotFoundError('Media file unavailable'); }
 }
 
@@ -122,11 +124,15 @@ export async function purgeExpiredMedia(now = new Date()): Promise<number> {
     where: { expiresAt: LessThanOrEqual(now) },
   });
   for (const asset of expired) {
+    // Never delete from the current upload provider when the asset lives elsewhere.
+    let source;
+    try { source = getStorageProvider(asset.storageProvider); }
+    catch { continue; }
     await AppDataSource.transaction(async manager => {
       await manager.delete(FindingAttachment, { mediaAsset: { id: asset.id } });
       await manager.delete(MediaAsset, { id: asset.id });
     });
-    await storage.deleteFile(asset.storageKey).catch(() => undefined);
+    await source.deleteFile(asset.storageKey).catch(() => undefined);
   }
   return expired.length;
 }

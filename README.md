@@ -68,7 +68,14 @@ Demo password for every seeded account: `password`
 
 Admin signs in to `/admin` and manages Backoffice/Technician accounts only.
 
-The web app lives in `../frontend` (`npm install` then `npm run dev`). It proxies `/api` to port 4090.
+The web app lives in `../frontend`. Production: Nginx on **4080** (see `../frontend/deploy/`).
+
+```bash
+# On the VPS, from frontend/
+sudo bash deploy/install.sh
+# Backend .env: CORS_ORIGIN=http://YOUR.VPS.IP:4080  COOKIE_SECURE=false
+```
+
 
 ## Scripts
 

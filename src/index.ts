@@ -10,9 +10,9 @@ async function bootstrap(): Promise<void> {
 
   const app = createApp();
 
-  const server = app.listen(env.port, () => {
+  const server = app.listen(env.port, env.host, () => {
     console.log(
-      `API listening on http://localhost:${env.port} (${env.nodeEnv})`,
+      `API listening on http://${env.host}:${env.port} (${env.nodeEnv})`,
     );
   });
   const chatOutboxTimer = setInterval(() => {

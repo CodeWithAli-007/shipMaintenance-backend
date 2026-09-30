@@ -8,8 +8,8 @@ export type { StorageProvider } from './types.js';
 export { LocalStorage } from './LocalStorage.js';
 export { S3Storage } from './S3Storage.js';
 
-function createStorage(): StorageProvider {
-  if (env.storage.provider === 's3') {
+export function getStorageProvider(name: string): StorageProvider {
+  if (name === 's3') {
     const { region, bucket, accessKeyId, secretAccessKey, prefix, endpoint } = env.storage.s3;
     if (!region || !bucket || !accessKeyId || !secretAccessKey) {
       throw new Error(
@@ -26,7 +26,8 @@ function createStorage(): StorageProvider {
     });
   }
 
-  return new LocalStorage(resolve(env.storage.localPath));
+  if (name === 'local') return new LocalStorage(resolve(env.storage.localPath));
+  throw new Error('Unsupported media storage provider');
 }
 
-export const storage: StorageProvider = createStorage();
+export const storage: StorageProvider = getStorageProvider(env.storage.provider);

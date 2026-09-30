@@ -17,6 +17,8 @@
     "seed": "tsx src/db/seed.ts",
     "test:media": "tsx tests/finding-media.integration.ts",
     "test:chat": "tsx tests/project-chat-membership.integration.ts",
+    "test:mobile-auth": "tsx tests/mobile-auth.integration.ts",
+    "test:media-provider": "tsx tests/media-provider.integration.ts",
     "migrate:prod": "node ./node_modules/typeorm/cli.js migration:run -d dist/data-source.js"
   },
   "keywords": [],

@@ -3,8 +3,13 @@ import { z } from 'zod';
 
 loadEnv();
 
+const boolish = z
+  .union([z.boolean(), z.enum(['true', 'false', '1', '0'])])
+  .transform((value) => value === true || value === 'true' || value === '1');
+
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
+  HOST: z.string().min(1).default('0.0.0.0'),
   PORT: z.coerce.number().int().positive().default(4090),
   POSTGRES_HOST: z.string().min(1).default('localhost'),
   POSTGRES_PORT: z.coerce.number().int().positive().default(5432),
@@ -12,6 +17,8 @@ const envSchema = z.object({
   POSTGRES_PASSWORD: z.string().default(''),
   POSTGRES_DB: z.string().min(1, 'POSTGRES_DB is required'),
   CORS_ORIGIN: z.string().default('http://localhost:5173'),
+  // false for plain HTTP (VPS IP). true only behind HTTPS.
+  COOKIE_SECURE: boolish.optional(),
   SESSION_TTL_HOURS: z.coerce.number().int().min(1).max(720).default(168),
   MEDIA_RETENTION_DAYS: z.coerce.number().int().min(1).max(365).default(30),
   STORAGE_PROVIDER: z.enum(['local', 's3']).default('local'),
@@ -60,6 +67,7 @@ const data = parsed.data;
 
 export const env = {
   nodeEnv: data.NODE_ENV,
+  host: data.HOST,
   port: data.PORT,
   postgres: {
     host: data.POSTGRES_HOST,
@@ -73,6 +81,8 @@ export const env = {
     .filter(Boolean),
   isProduction: data.NODE_ENV === 'production',
   isDevelopment: data.NODE_ENV === 'development',
+  // Secure cookies need HTTPS. Default false so HTTP VPS IP deploys work; set COOKIE_SECURE=true behind HTTPS.
+  cookieSecure: data.COOKIE_SECURE ?? false,
   sessionTtlHours: data.SESSION_TTL_HOURS,
   mediaRetentionDays: data.MEDIA_RETENTION_DAYS,
   storage: {

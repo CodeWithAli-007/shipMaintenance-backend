@@ -38,8 +38,8 @@ export function parseCookies(req: Request): Record<string, string> {
 }
 
 function cookieBase(maxAgeSeconds: number): string {
-  const secure = env.isProduction ? '; Secure' : '';
-  return `Path=/; SameSite=Strict; Max-Age=${maxAgeSeconds}${secure}`;
+  const secure = env.cookieSecure ? '; Secure' : '';
+  return `Path=/; SameSite=Lax; Max-Age=${maxAgeSeconds}${secure}`;
 }
 
 export function setSessionCookies(
@@ -59,13 +59,13 @@ export function setSessionCookies(
 }
 
 export function clearSessionCookies(res: Response): void {
-  const secure = env.isProduction ? '; Secure' : '';
+  const secure = env.cookieSecure ? '; Secure' : '';
   res.append(
     'Set-Cookie',
-    `${SESSION_COOKIE}=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0${secure}`,
+    `${SESSION_COOKIE}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0${secure}`,
   );
   res.append(
     'Set-Cookie',
-    `${CSRF_COOKIE}=; Path=/; SameSite=Strict; Max-Age=0${secure}`,
+    `${CSRF_COOKIE}=; Path=/; SameSite=Lax; Max-Age=0${secure}`,
   );
 }

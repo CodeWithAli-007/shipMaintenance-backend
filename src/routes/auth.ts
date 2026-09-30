@@ -6,10 +6,13 @@ import { loginWithPassword, revokeSession } from '../services/auth.js';
 import { requireAuth } from '../middleware/auth.js';
 import {
   SESSION_COOKIE,
+  CSRF_COOKIE,
   clearSessionCookies,
   parseCookies,
   setSessionCookies,
+  safeTokenMatches,
 } from '../lib/session.js';
+import { ForbiddenError } from '../lib/errors.js';
 
 export const authRouter = Router();
 const loginLimiter = rateLimit({
@@ -30,15 +33,32 @@ authRouter.post(
       ipAddress: req.ip,
     });
     setSessionCookies(res, result.sessionToken, result.csrfToken);
-    res.json({ user: result.user });
+    res.setHeader('Cache-Control', 'no-store');
+    res.json({ user: result.user, csrfToken: result.csrfToken });
   }),
+);
+
+authRouter.get(
+  '/csrf',
+  requireAuth,
+  (req, res) => {
+    // Native clients share the cookie jar but cannot read document.cookie.
+    const csrfToken = parseCookies(req)[CSRF_COOKIE];
+    if (!csrfToken || !req.authCsrfHash || !safeTokenMatches(csrfToken, req.authCsrfHash)) {
+      throw new ForbiddenError('Invalid CSRF token');
+    }
+    res.setHeader('Cache-Control', 'no-store');
+    res.json({ csrfToken });
+  },
 );
 
 authRouter.get(
   '/me',
   requireAuth,
   asyncHandler(async (req, res) => {
-    res.json({ user: req.user });
+    const csrfToken = parseCookies(req)[CSRF_COOKIE];
+    res.setHeader('Cache-Control', 'no-store');
+    res.json({ user: req.user, csrfToken: csrfToken && req.authCsrfHash && safeTokenMatches(csrfToken, req.authCsrfHash) ? csrfToken : undefined });
   }),
 );
 
