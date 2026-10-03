@@ -9,6 +9,7 @@ import morgan from 'morgan';
 import { env } from './config/env.js';
 import { apiRouter } from './routes/index.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
+import { mountSwagger } from './swagger.js';
 
 export function createApp() {
   const app = express();
@@ -16,14 +17,17 @@ export function createApp() {
   app.disable('x-powered-by');
   app.use(
     helmet({
-      contentSecurityPolicy: {
-        directives: {
-          defaultSrc: ["'self'"],
-          baseUri: ["'self'"],
-          objectSrc: ["'none'"],
-          frameAncestors: ["'none'"],
-        },
-      },
+      // Swagger UI needs inline scripts/styles; relax CSP only in development.
+      contentSecurityPolicy: env.isDevelopment
+        ? false
+        : {
+            directives: {
+              defaultSrc: ["'self'"],
+              baseUri: ["'self'"],
+              objectSrc: ["'none'"],
+              frameAncestors: ["'none'"],
+            },
+          },
       referrerPolicy: { policy: 'no-referrer' },
     }),
   );
@@ -39,11 +43,14 @@ export function createApp() {
   app.use(morgan(env.isProduction ? 'combined' : 'dev'));
   app.use('/api', requireAuthenticatedMutation);
 
+  const swaggerEnabled = mountSwagger(app);
+
   app.get('/', (_req, res) => {
     res.json({
       name: 'Shipping Maintenance API',
       version: '0.1.0',
-      docs: '/api/health',
+      health: '/api/health',
+      ...(swaggerEnabled ? { docs: '/api-docs' } : {}),
     });
   });
 

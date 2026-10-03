@@ -33,30 +33,30 @@ export class MediaAsset {
   })
   mediaType!: MediaType;
 
-  @Column({ name: 'original_filename', type: 'varchar', length: 512 })
-  originalFilename!: string;
+  @Column({ name: 'original_filename', type: 'varchar', length: 500, nullable: true })
+  originalFilename!: string | null;
 
-  @Column({ name: 'mime_type', type: 'varchar', length: 255 })
-  mimeType!: string;
+  @Column({ name: 'mime_type', type: 'varchar', length: 150, nullable: true })
+  mimeType!: string | null;
 
   @Index()
-  @Column({ name: 'storage_provider', type: 'varchar', length: 100 })
+  @Column({ name: 'storage_provider', type: 'varchar', length: 80 })
   storageProvider!: string;
 
-  @Column({ name: 'storage_key', type: 'varchar', length: 1024 })
+  @Column({ name: 'storage_key', type: 'text' })
   storageKey!: string;
 
-  @Column({ name: 'external_file_id', type: 'varchar', length: 255, nullable: true })
+  @Column({ name: 'external_file_id', type: 'text', nullable: true })
   externalFileId!: string | null;
 
-  @Column({ name: 'thumbnail_key', type: 'varchar', length: 1024, nullable: true })
+  @Column({ name: 'thumbnail_key', type: 'text', nullable: true })
   thumbnailKey!: string | null;
 
   @Column({ name: 'file_size_bytes', type: 'bigint', nullable: true })
   fileSizeBytes!: string | null;
 
-  @Column({ name: 'duration_seconds', type: 'int', nullable: true })
-  durationSeconds!: number | null;
+  @Column({ name: 'duration_seconds', type: 'numeric', nullable: true })
+  durationSeconds!: string | null;
 
   @Column({ type: 'int', nullable: true })
   width!: number | null;
@@ -64,15 +64,18 @@ export class MediaAsset {
   @Column({ type: 'int', nullable: true })
   height!: number | null;
 
-  @Column({ type: 'jsonb', default: () => ({}) })
-  metadata!: Record<string, unknown>;
+  @Column({ type: 'jsonb', nullable: true })
+  metadata!: Record<string, unknown> | null;
+
+  @Column({ name: 'content_hash', type: 'varchar', length: 64, nullable: true })
+  contentHash!: string | null;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt!: Date;
 
   @Index()
-  @Column({ name: 'expires_at', type: 'timestamptz' })
-  expiresAt!: Date;
+  @Column({ name: 'expires_at', type: 'timestamptz', nullable: true })
+  expiresAt!: Date | null;
 
   @OneToMany('FindingAttachment', 'mediaAsset')
   findingAttachments!: FindingAttachment[];

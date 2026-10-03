@@ -11,12 +11,10 @@ import {
 } from './schemas.js';
 import {
   addProjectMember,
-  addProjectBackofficeMember,
   createProject,
   getProject,
   listProjects,
   removeProjectMember,
-  removeProjectBackofficeMember,
   updateProject,
 } from '../services/projects.js';
 
@@ -28,27 +26,6 @@ projectsRouter.get(
   '/',
   asyncHandler(async (req, res) => {
     res.json({ projects: await listProjects(req.user!) });
-  }),
-);
-
-projectsRouter.post(
-  '/:id/backoffice-members',
-  requireRoles(UserRole.BACKOFFICE),
-  asyncHandler(async (req, res) => {
-    const { id } = parseInput(uuidParam, req.params);
-    const body = parseInput(memberBody, req.body);
-    const project = await addProjectBackofficeMember(id, body.userId, req.user!);
-    res.status(201).json({ project });
-  }),
-);
-
-projectsRouter.post(
-  '/:id/backoffice-members/:userId/remove',
-  requireRoles(UserRole.BACKOFFICE),
-  asyncHandler(async (req, res) => {
-    const { id, userId } = parseInput(userIdParam, req.params);
-    const project = await removeProjectBackofficeMember(id, userId, req.user!);
-    res.json({ project });
   }),
 );
 

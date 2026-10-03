@@ -10,5 +10,3 @@ coverage/
 .idea/
 
 .data/
-matrix/*.secret
-matrix/*.key

@@ -55,3 +55,16 @@ export enum CommentVisibility {
   TECHNICIAN_VISIBLE = 'TECHNICIAN_VISIBLE',
   INTERNAL = 'INTERNAL',
 }
+
+export enum AiAnalysisType {
+  MEDIA_EVIDENCE = 'MEDIA_EVIDENCE',
+  FINDING_ANALYSIS = 'FINDING_ANALYSIS',
+}
+
+export enum AiAnalysisStatus {
+  PENDING = 'PENDING',
+  PROCESSING = 'PROCESSING',
+  COMPLETED = 'COMPLETED',
+  FAILED = 'FAILED',
+  OUTDATED = 'OUTDATED',
+}

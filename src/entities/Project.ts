@@ -14,7 +14,6 @@ import { Vessel } from './Vessel.js';
 import { User } from './User.js';
 import type { ProjectAssignment } from './ProjectAssignment.js';
 import type { ProjectMember } from './ProjectMember.js';
-import type { ProjectBackofficeMember } from './ProjectBackofficeMember.js';
 import type { Finding } from './Finding.js';
 
 @Entity({ name: 'projects' })
@@ -30,7 +29,7 @@ export class Project {
   @JoinColumn({ name: 'vessel_id' })
   vessel!: Vessel;
 
-  @Column({ name: 'project_code', type: 'varchar', length: 50, unique: true })
+  @Column({ name: 'project_code', type: 'varchar', length: 100, unique: true })
   projectCode!: string;
 
   @Column({ type: 'varchar', length: 255 })
@@ -89,9 +88,6 @@ export class Project {
 
   @OneToMany('ProjectMember', 'project')
   members!: ProjectMember[];
-
-  @OneToMany('ProjectBackofficeMember', 'project')
-  backofficeMembers!: ProjectBackofficeMember[];
 
   @OneToMany('Finding', 'project')
   findings!: Finding[];

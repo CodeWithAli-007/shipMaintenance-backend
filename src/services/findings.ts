@@ -6,6 +6,7 @@ import { User } from '../entities/User.js';
 import { CommentVisibility, FindingSeverity, FindingStatus, ProjectStatus } from '../entities/enums.js';
 import { ForbiddenError, NotFoundError, ValidationError } from '../lib/errors.js';
 import { canAccessProject, isBackofficeRole } from './access.js';
+import { markFindingAnalysisOutdated } from './findingAnalysis.js';
 import type { AuthUser } from '../types/index.js';
 
 export interface CreateFindingInput {
@@ -76,8 +77,11 @@ function toFindingDetail(finding: Finding, actor: AuthUser) {
     .slice()
     .sort((a, b) => a.sortOrder - b.sortOrder || a.createdAt.getTime() - b.createdAt.getTime())
     .map(link => ({
-    id: link.mediaAsset.id, name: link.mediaAsset.originalFilename,
-    type: link.mediaAsset.mediaType, mimeType: link.mediaAsset.mimeType,
+    id: link.mediaAsset.id,
+    attachmentId: link.id,
+    name: link.mediaAsset.originalFilename ?? 'media',
+    type: link.mediaAsset.mediaType,
+    mimeType: link.mediaAsset.mimeType ?? 'application/octet-stream',
     size: Number(link.mediaAsset.fileSizeBytes ?? 0), createdAt: link.createdAt,
     expiresAt: link.mediaAsset.expiresAt,
     updateId: link.findingUpdate?.id ?? null,
@@ -291,6 +295,7 @@ export async function addFindingUpdate(
 
   finding.updatedAt = new Date();
   await AppDataSource.getRepository(Finding).save(finding);
+  await markFindingAnalysisOutdated(findingId);
 
   return getFinding(findingId, actor);
 }

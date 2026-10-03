@@ -1,7 +1,6 @@
 import { AppDataSource } from '../data-source.js';
 import { Finding } from '../entities/Finding.js';
 import { ProjectMember } from '../entities/ProjectMember.js';
-import { ProjectBackofficeMember } from '../entities/ProjectBackofficeMember.js';
 import { UserRole } from '../entities/enums.js';
 
 /**
@@ -21,22 +20,6 @@ export async function canAccessProject(
   });
 
   return count > 0;
-}
-
-/** E2EE chat never inherits role-wide Backoffice access. */
-export async function canAccessProjectChat(
-  userId: string,
-  projectId: string,
-): Promise<boolean> {
-  const [technicianCount, backofficeCount] = await Promise.all([
-    AppDataSource.getRepository(ProjectMember).count({
-      where: { project: { id: projectId }, user: { id: userId }, active: true },
-    }),
-    AppDataSource.getRepository(ProjectBackofficeMember).count({
-      where: { project: { id: projectId }, user: { id: userId }, active: true },
-    }),
-  ]);
-  return technicianCount + backofficeCount > 0;
 }
 
 export async function canAccessFinding(

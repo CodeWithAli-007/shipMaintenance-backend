@@ -7,6 +7,8 @@ import { asyncHandler, parseInput } from '../lib/http.js';
 import { requireAuth } from '../middleware/auth.js';
 import {
   createFindingBody,
+  analyzeFindingBody,
+  findingAiMediaSelectionBody,
   findingUpdateBody,
   projectIdParam,
   updateFindingBody,
@@ -19,6 +21,14 @@ import {
   listProjectFindings,
   updateFinding,
 } from '../services/findings.js';
+import {
+  analyzeFindingWithLlm,
+  getFindingAiState,
+  runFindingAiAnalysis,
+  setFindingAiMediaSelection,
+} from '../services/findingAnalysis.js';
+import { requireRoles } from '../middleware/auth.js';
+import { UserRole } from '../entities/enums.js';
 
 export const findingsRouter = Router();
 
@@ -97,9 +107,47 @@ findingsRouter.post('/findings/:id/messages', asyncHandler(async (req, res) => {
 findingsRouter.get('/findings/:id/media/:mediaId', asyncHandler(async (req, res) => {
   const { id, mediaId } = parseInput(z.object({ id: uuidString, mediaId: uuidString }), req.params);
   const { asset, bytes } = await getMediaFile(id, mediaId, req.user!);
-  res.setHeader('Content-Type', asset.mimeType);
+  res.setHeader('Content-Type', asset.mimeType ?? 'application/octet-stream');
   res.setHeader('Cache-Control', 'private, no-store');
   res.setHeader('X-Content-Type-Options', 'nosniff');
-  res.setHeader('Content-Disposition', `${asset.mediaType === 'DOCUMENT' ? 'attachment' : 'inline'}; filename*=UTF-8''${encodeURIComponent(asset.originalFilename)}`);
+  res.setHeader('Content-Disposition', `${asset.mediaType === 'DOCUMENT' ? 'attachment' : 'inline'}; filename*=UTF-8''${encodeURIComponent(asset.originalFilename ?? 'media')}`);
   res.send(bytes);
 }));
+
+findingsRouter.post(
+  '/findings/:id/analyze',
+  requireRoles(UserRole.BACKOFFICE),
+  asyncHandler(async (req, res) => {
+    const { id } = parseInput(uuidParam, req.params);
+    const body = parseInput(analyzeFindingBody, req.body);
+    const analysis = await analyzeFindingWithLlm(id, body.mediaIds, req.user!);
+    res.json({ analysis });
+  }),
+);
+
+findingsRouter.get(
+  '/findings/:id/ai',
+  asyncHandler(async (req, res) => {
+    const { id } = parseInput(uuidParam, req.params);
+    res.json(await getFindingAiState(id, req.user!));
+  }),
+);
+
+findingsRouter.put(
+  '/findings/:id/ai/media',
+  requireRoles(UserRole.BACKOFFICE),
+  asyncHandler(async (req, res) => {
+    const { id } = parseInput(uuidParam, req.params);
+    const body = parseInput(findingAiMediaSelectionBody, req.body);
+    res.json(await setFindingAiMediaSelection(id, body.items, req.user!));
+  }),
+);
+
+findingsRouter.post(
+  '/findings/:id/ai/run',
+  requireRoles(UserRole.BACKOFFICE),
+  asyncHandler(async (req, res) => {
+    const { id } = parseInput(uuidParam, req.params);
+    res.json(await runFindingAiAnalysis(id, req.user!));
+  }),
+);

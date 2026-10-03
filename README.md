@@ -34,7 +34,8 @@ npm run dev
 ```
 
 API: `http://localhost:4090` (or the `PORT` in `.env`)  
-Health: `http://localhost:4090/api/health`
+Health: `http://localhost:4090/api/health`  
+Swagger (dev only): `http://localhost:4090/api-docs` — when `NODE_ENV=development`
 
 ## Production (Hostinger VPS — systemd)
 

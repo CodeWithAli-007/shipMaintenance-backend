@@ -20,7 +20,6 @@ const envSchema = z.object({
   // false for plain HTTP (VPS IP). true only behind HTTPS.
   COOKIE_SECURE: boolish.optional(),
   SESSION_TTL_HOURS: z.coerce.number().int().min(1).max(720).default(168),
-  MEDIA_RETENTION_DAYS: z.coerce.number().int().min(1).max(365).default(30),
   STORAGE_PROVIDER: z.enum(['local', 's3']).default('local'),
   MEDIA_STORAGE_PATH: z.string().min(1).default('.data/media'),
   AWS_REGION: z.string().optional(),
@@ -29,13 +28,7 @@ const envSchema = z.object({
   AWS_SECRET_ACCESS_KEY: z.string().optional(),
   AWS_S3_PREFIX: z.string().optional(),
   AWS_S3_ENDPOINT: z.string().optional(),
-  MATRIX_INTERNAL_URL: z.string().url().default('http://localhost:8008'),
-  MATRIX_PUBLIC_URL: z.string().url().default('http://localhost:5173'),
-  MATRIX_SERVER_NAME: z.string().min(1).default('ship-maintenance.local'),
-  MATRIX_ADMIN_USERNAME: z.string().min(1).default('shipmaintenance_bridge'),
-  MATRIX_ADMIN_PASSWORD: z.string().min(16).default('local-development-bridge-password'),
-  MATRIX_USER_PASSWORD_SECRET: z.string().min(32).default('local-development-user-password-secret'),
-  MATRIX_REGISTRATION_SECRET_FILE: z.string().min(1).default('matrix/registration.secret'),
+  LLM_SERVICE_URL: z.string().url().default('http://127.0.0.1:4050'),
 });
 
 const parsed = envSchema.safeParse(process.env);
@@ -84,7 +77,6 @@ export const env = {
   // Secure cookies need HTTPS. Default false so HTTP VPS IP deploys work; set COOKIE_SECURE=true behind HTTPS.
   cookieSecure: data.COOKIE_SECURE ?? false,
   sessionTtlHours: data.SESSION_TTL_HOURS,
-  mediaRetentionDays: data.MEDIA_RETENTION_DAYS,
   storage: {
     provider: data.STORAGE_PROVIDER,
     localPath: data.MEDIA_STORAGE_PATH,
@@ -97,13 +89,5 @@ export const env = {
       endpoint: data.AWS_S3_ENDPOINT || undefined,
     },
   },
-  matrix: {
-    internalUrl: data.MATRIX_INTERNAL_URL.replace(/\/$/, ''),
-    publicUrl: data.MATRIX_PUBLIC_URL.replace(/\/$/, ''),
-    serverName: data.MATRIX_SERVER_NAME,
-    adminUsername: data.MATRIX_ADMIN_USERNAME,
-    adminPassword: data.MATRIX_ADMIN_PASSWORD,
-    userPasswordSecret: data.MATRIX_USER_PASSWORD_SECRET,
-    registrationSecretFile: data.MATRIX_REGISTRATION_SECRET_FILE,
-  },
+  llmServiceUrl: data.LLM_SERVICE_URL.replace(/\/$/, ''),
 };

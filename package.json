@@ -16,7 +16,6 @@
     "migration:generate": "tsx ./node_modules/typeorm/cli.js migration:generate -d src/data-source.ts",
     "seed": "tsx src/db/seed.ts",
     "test:media": "tsx tests/finding-media.integration.ts",
-    "test:chat": "tsx tests/project-chat-membership.integration.ts",
     "test:mobile-auth": "tsx tests/mobile-auth.integration.ts",
     "test:media-provider": "tsx tests/media-provider.integration.ts",
     "migrate:prod": "node ./node_modules/typeorm/cli.js migration:run -d dist/data-source.js"
@@ -38,6 +37,7 @@
     "morgan": "^1.12.1",
     "pg": "^8.23.0",
     "reflect-metadata": "^0.2.2",
+    "swagger-ui-express": "^5.0.1",
     "typeorm": "^0.3.31",
     "uuid": "^14.0.2",
     "zod": "^4.6.5"
@@ -48,6 +48,7 @@
     "@types/morgan": "^1.9.10",
     "@types/node": "^26.6.2",
     "@types/pg": "^8.23.1",
+    "@types/swagger-ui-express": "^4.1.8",
     "@types/uuid": "^10.0.0",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2"

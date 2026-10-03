@@ -33,8 +33,8 @@ export const clientBody = z.object({
   clientCode: blankToNull(100),
   addressLine1: blankToNull(255),
   addressLine2: blankToNull(255),
-  city: blankToNull(100),
-  postalCode: blankToNull(50),
+  city: blankToNull(150),
+  postalCode: blankToNull(30),
   country: blankToNull(100),
   phone: blankToNull(50),
   email: blankToNull(255),
@@ -99,7 +99,7 @@ export const updateProjectBody = z.object({
 export const createFindingBody = z.object({
   title: blankToNull(255),
   description: z.string().trim().min(1).max(10000),
-  severity: z.enum(['LOW', 'MEDIUM', 'HIGH']).default('MEDIUM'),
+  severity: z.enum(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']).default('MEDIUM'),
   equipmentName: blankToNull(255),
   equipmentModel: blankToNull(255),
   equipmentLocation: blankToNull(255),
@@ -108,13 +108,29 @@ export const createFindingBody = z.object({
 export const updateFindingBody = z.object({
   title: blankToNull(255),
   description: z.string().trim().min(1).max(10000).optional(),
-  severity: z.enum(['LOW', 'MEDIUM', 'HIGH']).optional(),
+  severity: z.enum(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']).optional(),
   status: z
     .enum(['OPEN', 'NEEDS_INFO', 'UNDER_REVIEW', 'REVIEWED', 'CLOSED'])
     .optional(),
   equipmentName: blankToNull(255),
   equipmentModel: blankToNull(255),
   equipmentLocation: blankToNull(255),
+});
+
+export const analyzeFindingBody = z.object({
+  mediaIds: z.array(uuidString).min(1).max(8),
+});
+
+export const findingAiMediaSelectionBody = z.object({
+  items: z
+    .array(
+      z.object({
+        attachmentId: uuidString,
+        selected: z.boolean(),
+      }),
+    )
+    .min(1)
+    .max(40),
 });
 
 export const findingUpdateBody = z.object({

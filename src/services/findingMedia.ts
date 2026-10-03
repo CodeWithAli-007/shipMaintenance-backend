@@ -1,8 +1,6 @@
-import { randomUUID } from 'node:crypto';
+import { randomUUID, createHash } from 'node:crypto';
 import { z } from 'zod';
-import { LessThanOrEqual } from 'typeorm';
 import { AppDataSource } from '../data-source.js';
-import { env } from '../config/env.js';
 import { Finding } from '../entities/Finding.js';
 import { FindingUpdate } from '../entities/FindingUpdate.js';
 import { FindingComment } from '../entities/FindingComment.js';
@@ -15,12 +13,8 @@ import { canAccessFinding, isBackofficeRole } from './access.js';
 import { uuidString } from '../routes/schemas.js';
 import type { AuthUser } from '../types/index.js';
 
-export function mediaExpiresAt(from = new Date()): Date {
-  return new Date(from.getTime() + env.mediaRetentionDays * 24 * 60 * 60 * 1000);
-}
-
-export function isMediaExpired(expiresAt: Date, now = new Date()): boolean {
-  return expiresAt.getTime() <= now.getTime();
+export function isMediaExpired(expiresAt: Date | null, now = new Date()): boolean {
+  return expiresAt !== null && expiresAt.getTime() <= now.getTime();
 }
 
 export const messageBody = z.object({
@@ -97,7 +91,8 @@ export async function saveMessage(id: string, input: z.infer<typeof messageBody>
         for (const [index, file] of files.entries()) {
           const key = randomUUID();
           await storage.uploadFile(key, file.bytes); written.push(key);
-          const asset = await manager.save(MediaAsset, manager.create(MediaAsset, { uploadedBy: { id: actor.id }, mediaType: file.type, originalFilename: file.name, mimeType: file.mime, storageProvider: storage.name, storageKey: key, fileSizeBytes: String(file.bytes.length), metadata: {}, expiresAt: mediaExpiresAt() }));
+          const contentHash = createHash('sha256').update(file.bytes).digest('hex');
+          const asset = await manager.save(MediaAsset, manager.create(MediaAsset, { uploadedBy: { id: actor.id }, mediaType: file.type, originalFilename: file.name, mimeType: file.mime, storageProvider: storage.name, storageKey: key, fileSizeBytes: String(file.bytes.length), metadata: {}, contentHash, expiresAt: null }));
           await manager.save(FindingAttachment, manager.create(FindingAttachment, { finding: { id }, findingUpdate: update, mediaAsset: asset, sortOrder: index }));
         }
         await manager.update(Finding, id, { updatedAt: new Date() });
@@ -107,6 +102,8 @@ export async function saveMessage(id: string, input: z.infer<typeof messageBody>
     await Promise.allSettled(written.map(key => storage.deleteFile(key)));
     throw error;
   }
+  const { markFindingAnalysisOutdated } = await import('./findingAnalysis.js');
+  await markFindingAnalysisOutdated(id);
 }
 export async function getMediaFile(findingId: string, mediaId: string, actor: AuthUser) {
   await assertFindingAccess(findingId, actor);
@@ -117,22 +114,4 @@ export async function getMediaFile(findingId: string, mediaId: string, actor: Au
   catch { throw new AppError('Media storage is not configured. Ask your administrator to restore access to the original storage provider.', 503, 'MEDIA_STORAGE_UNAVAILABLE'); }
   try { return { asset: link.mediaAsset, bytes: await source.getFile(link.mediaAsset.storageKey) }; }
   catch { throw new NotFoundError('Media file unavailable'); }
-}
-
-export async function purgeExpiredMedia(now = new Date()): Promise<number> {
-  const expired = await AppDataSource.getRepository(MediaAsset).find({
-    where: { expiresAt: LessThanOrEqual(now) },
-  });
-  for (const asset of expired) {
-    // Never delete from the current upload provider when the asset lives elsewhere.
-    let source;
-    try { source = getStorageProvider(asset.storageProvider); }
-    catch { continue; }
-    await AppDataSource.transaction(async manager => {
-      await manager.delete(FindingAttachment, { mediaAsset: { id: asset.id } });
-      await manager.delete(MediaAsset, { id: asset.id });
-    });
-    await source.deleteFile(asset.storageKey).catch(() => undefined);
-  }
-  return expired.length;
 }

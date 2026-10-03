@@ -13,7 +13,6 @@ import type { Team } from './Team.js';
 import type { TeamMember } from './TeamMember.js';
 import type { Project } from './Project.js';
 import type { ProjectMember } from './ProjectMember.js';
-import type { ProjectBackofficeMember } from './ProjectBackofficeMember.js';
 import type { Finding } from './Finding.js';
 import type { FindingComment } from './FindingComment.js';
 import type { MediaAsset } from './MediaAsset.js';
@@ -65,9 +64,6 @@ export class User {
 
   @OneToMany('ProjectMember', 'user')
   projectMemberships!: ProjectMember[];
-
-  @OneToMany('ProjectBackofficeMember', 'user')
-  projectBackofficeMemberships!: ProjectBackofficeMember[];
 
   @OneToMany('Finding', 'createdBy')
   createdFindings!: Finding[];

@@ -10,16 +10,14 @@ import {
   Project,
   ProjectAssignment,
   ProjectMember,
-  ProjectBackofficeMember,
   Finding,
   FindingUpdate,
   MediaAsset,
   FindingAttachment,
   FindingComment,
+  AiAnalysis,
+  FindingAiMedia,
   AuthSession,
-  MatrixUserIdentity,
-  ProjectChatRoom,
-  ChatMembershipOutbox,
 } from './entities/index.js';
 import { InitialSchema1740000000000 } from './migrations/1740000000000-InitialSchema.js';
 import { AddProjectBackofficeMembers1740000001000 } from './migrations/1740000001000-AddProjectBackofficeMembers.js';
@@ -29,6 +27,10 @@ import { AddProjectPriority1740000004000 } from './migrations/1740000004000-AddP
 import { AddAuthSessions1740000005000 } from './migrations/1740000005000-AddAuthSessions.js';
 import { AddEncryptedProjectChat1740000006000 } from './migrations/1740000006000-AddEncryptedProjectChat.js';
 import { AddMediaExpiry1740000007000 } from './migrations/1740000007000-AddMediaExpiry.js';
+import { AlignCoreSchemaV31740000008000 } from './migrations/1740000008000-AlignCoreSchemaV3.js';
+import { AddAiAnalysisSchema1740000009000 } from './migrations/1740000009000-AddAiAnalysisSchema.js';
+import { MakeMediaPermanent1740000010000 } from './migrations/1740000010000-MakeMediaPermanent.js';
+import { RemoveProjectChat1740000011000 } from './migrations/1740000011000-RemoveProjectChat.js';
 
 export const AppDataSource = new DataSource({
   type: 'postgres',
@@ -48,16 +50,14 @@ export const AppDataSource = new DataSource({
     Project,
     ProjectAssignment,
     ProjectMember,
-    ProjectBackofficeMember,
     Finding,
     FindingUpdate,
     MediaAsset,
     FindingAttachment,
     FindingComment,
+    AiAnalysis,
+    FindingAiMedia,
     AuthSession,
-    MatrixUserIdentity,
-    ProjectChatRoom,
-    ChatMembershipOutbox,
   ],
   migrations: [
     InitialSchema1740000000000,
@@ -68,6 +68,10 @@ export const AppDataSource = new DataSource({
     AddAuthSessions1740000005000,
     AddEncryptedProjectChat1740000006000,
     AddMediaExpiry1740000007000,
+    AlignCoreSchemaV31740000008000,
+    AddAiAnalysisSchema1740000009000,
+    MakeMediaPermanent1740000010000,
+    RemoveProjectChat1740000011000,
   ],
   migrationsTableName: 'typeorm_migrations',
   // Helps TypeORM CLI resolve paths when generating new migrations

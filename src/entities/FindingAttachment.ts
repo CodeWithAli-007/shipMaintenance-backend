@@ -41,7 +41,7 @@ export class FindingAttachment {
   @JoinColumn({ name: 'media_asset_id' })
   mediaAsset!: MediaAsset;
 
-  @Column({ type: 'varchar', length: 500, nullable: true })
+  @Column({ type: 'text', nullable: true })
   caption!: string | null;
 
   @Column({ name: 'sort_order', type: 'int', default: 0 })

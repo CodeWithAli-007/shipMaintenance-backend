@@ -31,10 +31,10 @@ export class Client {
   @Column({ name: 'address_line_2', type: 'varchar', length: 255, nullable: true })
   addressLine2!: string | null;
 
-  @Column({ type: 'varchar', length: 100, nullable: true })
+  @Column({ type: 'varchar', length: 150, nullable: true })
   city!: string | null;
 
-  @Column({ name: 'postal_code', type: 'varchar', length: 50, nullable: true })
+  @Column({ name: 'postal_code', type: 'varchar', length: 30, nullable: true })
   postalCode!: string | null;
 
   @Column({ type: 'varchar', length: 100, nullable: true })
