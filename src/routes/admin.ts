@@ -54,8 +54,8 @@ adminRouter.post(
     const user = await createManagedUser({
       email: body.email,
       fullName: body.fullName,
-      role: body.role as UserRole.BACKOFFICE | UserRole.TECHNICIAN,
       password: body.password,
+      role: body.role as UserRole.BACKOFFICE | UserRole.TECHNICIAN,
       isActive: body.isActive,
     });
     res.status(201).json({ user });

@@ -29,6 +29,10 @@ const envSchema = z.object({
   AWS_S3_PREFIX: z.string().optional(),
   AWS_S3_ENDPOINT: z.string().optional(),
   LLM_SERVICE_URL: z.string().url().default('http://127.0.0.1:4050'),
+  REPORT_COMPANY_NAME: z.string().min(1).max(120).default('Ship Maintenance'),
+  REPORT_COMPANY_ADDRESS: z.string().max(300).default(''),
+  REPORT_COMPANY_CONTACT: z.string().max(300).default(''),
+  REPORT_LOGO_PATH: z.string().optional(),
 });
 
 const parsed = envSchema.safeParse(process.env);
@@ -90,4 +94,6 @@ export const env = {
     },
   },
   llmServiceUrl: data.LLM_SERVICE_URL.replace(/\/$/, ''),
+  report: { companyName: data.REPORT_COMPANY_NAME, address: data.REPORT_COMPANY_ADDRESS,
+    contact: data.REPORT_COMPANY_CONTACT, logoPath: data.REPORT_LOGO_PATH },
 };

@@ -29,10 +29,20 @@ import {
 } from '../services/findingAnalysis.js';
 import { requireRoles } from '../middleware/auth.js';
 import { UserRole } from '../entities/enums.js';
+import { exportFindingReport } from '../services/findingReport.js';
 
 export const findingsRouter = Router();
 
 findingsRouter.use(requireAuth);
+
+findingsRouter.get('/findings/:id/report.pdf', requireRoles(UserRole.BACKOFFICE), asyncHandler(async (req, res) => {
+  const { id } = parseInput(uuidParam, req.params);
+  const { bytes, filename } = await exportFindingReport(id, req.user!);
+  res.setHeader('Content-Type', 'application/pdf');
+  res.setHeader('Cache-Control', 'private, no-store');
+  res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+  res.send(bytes);
+}));
 
 findingsRouter.get(
   '/projects/:projectId/findings',

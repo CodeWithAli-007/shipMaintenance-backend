@@ -32,6 +32,9 @@ import { AddAiAnalysisSchema1740000009000 } from './migrations/1740000009000-Add
 import { MakeMediaPermanent1740000010000 } from './migrations/1740000010000-MakeMediaPermanent.js';
 import { RemoveProjectChat1740000011000 } from './migrations/1740000011000-RemoveProjectChat.js';
 
+import { AddEmailAuth1740000012000 } from './migrations/1740000012000-AddEmailAuth.js';
+import { RemoveEmailAuth1740000013000 } from './migrations/1740000013000-RemoveEmailAuth.js';
+
 export const AppDataSource = new DataSource({
   type: 'postgres',
   host: env.postgres.host,
@@ -72,6 +75,8 @@ export const AppDataSource = new DataSource({
     AddAiAnalysisSchema1740000009000,
     MakeMediaPermanent1740000010000,
     RemoveProjectChat1740000011000,
+    AddEmailAuth1740000012000,
+    RemoveEmailAuth1740000013000,
   ],
   migrationsTableName: 'typeorm_migrations',
   // Helps TypeORM CLI resolve paths when generating new migrations

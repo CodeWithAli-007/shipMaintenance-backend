@@ -51,7 +51,7 @@ curl http://127.0.0.1:4090/api/health
 
 ## Dev auth
 
-`POST /api/auth/login` with email and password. The response token is the user id and is sent as `Authorization: Bearer <token>`.
+`POST /api/auth/login` accepts email and password and sets the session and CSRF cookies. An administrator sets the password when creating a user.
 
 Demo password for every seeded account: `password`
 

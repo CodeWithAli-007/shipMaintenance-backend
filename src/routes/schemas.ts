@@ -5,9 +5,14 @@ export const uuidString = z
   .string()
   .regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i, 'Invalid UUID');
 
-const blankToNull = (max: number) =>
+const phonePattern = /^\+?(?=(?:\D*\d){7,15}\D*$)[\d(][\d(). -]*[\d)]$/;
+const blankToNull = (max: number, format?: { pattern: RegExp; message: string }) =>
   z
-    .union([z.string().trim().max(max), z.null()])
+    .string()
+    .trim()
+    .max(max)
+    .refine((value) => !value || !format || format.pattern.test(value), format?.message)
+    .nullable()
     .optional()
     .transform((value) => {
       if (value == null || value === '') return value === undefined ? undefined : null;
@@ -36,8 +41,8 @@ export const clientBody = z.object({
   city: blankToNull(150),
   postalCode: blankToNull(30),
   country: blankToNull(100),
-  phone: blankToNull(50),
-  email: blankToNull(255),
+  phone: blankToNull(50, { pattern: phonePattern, message: 'Enter a phone number with 7 to 15 digits' }),
+  email: blankToNull(255, { pattern: z.regexes.email, message: 'Enter a valid email address' }),
   status: z.enum(['ACTIVE', 'INACTIVE']).optional(),
 });
 
@@ -145,12 +150,12 @@ export const managedUserBody = z.object({
   email: z.string().trim().email().max(255),
   fullName: z.string().trim().min(1).max(255),
   role: z.enum(['BACKOFFICE', 'TECHNICIAN']),
-  password: z.string().min(6).max(200).optional(),
+  password: z.string().min(6).max(200).refine((value) => Boolean(value.trim()), 'Password cannot contain only spaces').optional(),
   isActive: z.boolean().optional(),
 });
 
 export const createManagedUserBody = managedUserBody.extend({
-  password: z.string().min(6).max(200),
+  password: z.string().min(6).max(200).refine((value) => Boolean(value.trim()), 'Password cannot contain only spaces'),
 });
 
 export const updateManagedUserBody = managedUserBody.partial();

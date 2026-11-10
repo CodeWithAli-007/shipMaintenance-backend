@@ -29,8 +29,9 @@ export async function loginWithPassword(
   const csrfToken = randomToken();
   const now = new Date();
   const expiresAt = new Date(now.getTime() + env.sessionTtlHours * 60 * 60 * 1000);
-  await AppDataSource.getRepository(AuthSession).save(
-    AppDataSource.getRepository(AuthSession).create({
+  const sessions = AppDataSource.getRepository(AuthSession);
+  await sessions.save(
+    sessions.create({
       user,
       tokenHash: hashToken(sessionToken),
       csrfHash: hashToken(csrfToken),

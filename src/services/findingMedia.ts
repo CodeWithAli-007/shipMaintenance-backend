@@ -21,7 +21,7 @@ export const messageBody = z.object({
   requestId: uuidString,
   note: z.string().trim().max(10000),
   internal: z.boolean().default(false),
-  files: z.array(z.object({ name: z.string().min(1).max(512), type: z.string().max(255), data: z.string().max(28000000) })).max(8).default([]),
+  files: z.array(z.object({ name: z.string().trim().min(1).max(500), type: z.string().max(150), data: z.string().max(28000000) })).max(8).default([]),
 }).refine(v => v.note.length > 0 || v.files.length > 0, 'Write a message or attach a file');
 const mimeTypes: Record<string, MediaType> = {
   'image/jpeg': MediaType.IMAGE, 'image/png': MediaType.IMAGE, 'image/webp': MediaType.IMAGE, 'image/gif': MediaType.IMAGE,

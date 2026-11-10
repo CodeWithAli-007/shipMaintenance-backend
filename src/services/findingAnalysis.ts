@@ -17,10 +17,11 @@ import { AppError, ForbiddenError, NotFoundError, ValidationError } from '../lib
 import { assertFindingAccess, getMediaFile, isMediaExpired } from './findingMedia.js';
 import { isBackofficeRole } from './access.js';
 import type { AuthUser } from '../types/index.js';
+import { contentFromAnalysis } from '../reports/model.js';
 
 export const MEDIA_EVIDENCE_PROMPT_VERSION = 'media-evidence-v1';
 export const DOCUMENT_EVIDENCE_PROMPT_VERSION = 'doc-python-summary-v1';
-export const FINDING_ANALYSIS_PROMPT_VERSION = 'finding-analysis-v1';
+export const FINDING_ANALYSIS_PROMPT_VERSION = 'finding-analysis-v2-report';
 
 const AI_ELIGIBLE_MEDIA = new Set<MediaType>([
   MediaType.IMAGE,
@@ -551,6 +552,9 @@ export async function runFindingAiAnalysis(findingId: string, actor: AuthUser) {
       );
     }
 
+    if (!raw) throw new Error('Finding analysis returned no result');
+    // Validate structured report tables before persisting a successful analysis.
+    contentFromAnalysis(raw);
     analysis.status = AiAnalysisStatus.COMPLETED;
     analysis.result = raw;
     analysis.evidenceText = null;
@@ -559,6 +563,11 @@ export async function runFindingAiAnalysis(findingId: string, actor: AuthUser) {
       attachmentIds,
       mediaAssetIds,
       evidenceIds,
+      evidence: evidenceRows.map((row, index) => ({
+        mediaId: mediaAssetIds[index], text: row.evidenceText || '',
+        name: selected[index].findingAttachment.mediaAsset.originalFilename || 'media',
+        type: selected[index].findingAttachment.mediaAsset.mediaType,
+      })),
       evidencePromptVersion: MEDIA_EVIDENCE_PROMPT_VERSION,
       findingPromptVersion: FINDING_ANALYSIS_PROMPT_VERSION,
     };
